@@ -1,0 +1,17 @@
+body {
+    /* Use a clean font stack */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    
+    /* Subtle light grey background (Postgres-themed apps usually look great in blue/grey) */
+    background-color: #f4f7f6;
+    
+    /* Remove default browser margins */
+    margin: 0;
+    padding: 20px;
+    
+    /* Standard text color for readability */
+    color: #333;
+    
+    /* Ensures the body takes up the full height of the screen */
+    min-height: 100vh;
+}
