@@ -41,7 +41,7 @@ export async function POST(request) {
     generatedCode = generatedCode.replace(/^```(jsx|javascript|js)?\n/gm, '');
     generatedCode = generatedCode.replace(/```$/gm, '');
 
-    const targetDirectory = path.join(process.cwd(), 'app', 'active-user', 'generated-form');
+    const targetDirectory = path.join(process.cwd(),'src', 'app', 'active-user', 'generated-form');
     const targetFile = path.join(targetDirectory, `page_${Math.random()}.jsx`);
 
     if (!fs.existsSync(targetDirectory)) {
