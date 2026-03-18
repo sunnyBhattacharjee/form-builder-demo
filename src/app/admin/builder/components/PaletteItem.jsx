@@ -1,5 +1,5 @@
 import { useDrag, useDrop } from 'react-dnd';
-import * as C from "../util/constants"
+import * as C from "../../../../util/constants"
 import { styles } from '@/util/styles';
 // 1. Left Section: Draggable Palette Item
 export const PaletteItem = ({ element }) => {

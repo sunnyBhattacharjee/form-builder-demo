@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
 import { PaletteItem } from './PaletteItem';
 import { PropertiesPanel } from './PropertiesPanel';
-import * as C from "../util/constants"
+import * as C from "../../../../util/constants"
 import { styles } from '@/util/styles';
 import { CanvasItem } from './CanvasItem';
 

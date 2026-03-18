@@ -1,6 +1,6 @@
 // 2. Center Section: Canvas Element (Recursive)
 import { useDrag, useDrop } from 'react-dnd';
-import * as C from "../util/constants"
+import * as C from "../../../../util/constants"
 import { styles } from '@/util/styles';
 export const CanvasItem = ({ field, onSelect, onDelete, onDropItem, selectedFieldId }) => {
   const isSelected = selectedFieldId === field.id;
