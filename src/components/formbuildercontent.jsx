@@ -62,12 +62,42 @@ export function FormBuilderContent() {
   };
 
   const selectedFieldData = findFieldById(formFields, selectedFieldId);
+  const handlePublish = async () => {
+    const formSchema = {
+      formId: `form_${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      fields: formFields, 
+    };
 
+    try {
+      // Calling the Node.js API Route we just created
+      const response = await fetch('/api/forms/publish', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formSchema),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        console.log('Successfully routed through Node to Java:', result);
+        alert('Form successfully saved to the database!');
+      } else {
+        console.error('Failed to save form:', result.error);
+        alert(`Failed to publish form: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('Frontend Error:', error);
+      alert('Network error while contacting the Node layer.');
+    }
+  };
   return (
     <>
       <div style={styles.header}>
-        <h2>Drag & Drop Form Builder (Nested)</h2>
-        <button style={styles.publishBtn} onClick={() => setIsModalOpen(true)}>🚀 Publish</button>
+        <h2 style={styles.h2}>Drag & Drop Form Builder (Nested)</h2>
+        <button style={styles.publishBtn} onClick={() => handlePublish(true)}>🚀 Publish</button>
       </div>
 
       <div style={styles.container}>

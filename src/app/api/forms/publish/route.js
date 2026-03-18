@@ -1,41 +1,68 @@
 import { NextResponse } from 'next/server';
+import fs from 'fs';
+import path from 'path';
 
 export async function POST(request) {
   try {
-    // 1. Extract the JSON payload sent by the React frontend
     const formSchema = await request.json();
 
-    // 2. Perform Node-level validation here (optional but recommended)
     if (!formSchema.fields || !Array.isArray(formSchema.fields)) {
       return NextResponse.json({ error: 'Invalid form schema' }, { status: 400 });
     }
 
-    // 3. Forward the request to your Java backend
-    // The browser never sees this URL or the authorization headers
-    const javaBackendUrl = process.env.JAVA_BACKEND_URL || 'http://localhost:8080';
-    const javaSecretToken = process.env.JAVA_SERVICE_SECRET; 
+    // const javaBackendUrl = process.env.JAVA_BACKEND_URL || 'http://localhost:8080';
+    // const javaSecretToken = process.env.JAVA_SERVICE_SECRET; 
 
-    const response = await fetch(`${javaBackendUrl}/api/forms/publish`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        // Inject a server-to-server secret so Java knows it came from your Node layer
-        'Authorization': `Bearer ${javaSecretToken}`, 
-      },
-      body: JSON.stringify(formSchema),
+    // const response = await fetch(`${javaBackendUrl}/api/forms/publish`, {
+    //   method: 'POST',
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //     // Inject a server-to-server secret so Java knows it came from your Node layer
+    //     'Authorization': `Bearer ${javaSecretToken}`, 
+    //   },
+    //   body: JSON.stringify(formSchema),
+    // });
+
+    console.log(formSchema)
+
+    const ollamaResponse = await fetch('http://127.0.0.1:11434/api/generate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+        model: 'react-compiler',
+        prompt: JSON.stringify(formSchema), 
+        stream: false,
+    }),
     });
 
-    const data = await response.json();
+    const llmData = await ollamaResponse.json();
 
-    if (!response.ok) {
+    let generatedCode = llmData.response;
+    generatedCode = generatedCode.replace(/^```(jsx|javascript|js)?\n/gm, '');
+    generatedCode = generatedCode.replace(/```$/gm, '');
+
+    const targetDirectory = path.join(process.cwd(), 'app', 'active-user', 'generated-form');
+    const targetFile = path.join(targetDirectory, `page_${Math.random()}.jsx`);
+
+    if (!fs.existsSync(targetDirectory)) {
+      fs.mkdirSync(targetDirectory, { recursive: true });
+    }
+
+    fs.writeFileSync(targetFile, generatedCode.trim(), 'utf8');
+
+
+    if (!ollamaResponse.ok) {
       throw new Error(data.message || 'Failed to publish to Java backend');
     }
 
-    // 4. Return the successful response back to the React client
-    return NextResponse.json({ success: true, data }, { status: 200 });
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Code generated and saved successfully!',
+     //route: '/active-user/generated-form' 
+    });
 
   } catch (error) {
-    console.error('Node Layer Error:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    console.error('Compiler Error:', error);
+    return NextResponse.json({ error: 'Failed to compile UI' }, { status: 500 });
   }
 }
