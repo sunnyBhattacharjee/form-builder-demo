@@ -9,8 +9,7 @@ import { CanvasItem } from './CanvasItem';
 
 
 
-// --- The Core Logic Component ---
-// This component sits safely inside the DndProvider context
+
 export function FormBuilderContent() {
   const [formFields, setFormFields] = useState([]);
   const [selectedFieldId, setSelectedFieldId] = useState(null);
@@ -70,7 +69,6 @@ export function FormBuilderContent() {
     };
 
     try {
-      // Calling the Node.js API Route we just created
       const response = await fetch('/api/forms/publish', {
         method: 'POST',
         headers: {
@@ -83,7 +81,7 @@ export function FormBuilderContent() {
 
       if (response.ok) {
         console.log('Successfully routed through Node to Java:', result);
-        alert('Form successfully saved to the database!');
+        alert('Form successfully generated, Please login as user to check!');
       } else {
         console.error('Failed to save form:', result.error);
         alert(`Failed to publish form: ${result.error}`);
@@ -97,17 +95,17 @@ export function FormBuilderContent() {
     <>
       <div style={styles.header}>
         <h2 style={styles.h2}>Drag & Drop Form Builder (Nested)</h2>
-        <button style={styles.publishBtn} onClick={() => handlePublish(true)}>🚀 Publish</button>
+        <button style={styles.publishBtn} onClick={() => handlePublish()}>🚀 Publish</button>
       </div>
 
       <div style={styles.container}>
-        {/* 1. Left Section */}
+        {/* Left Section */}
         <div style={styles.sidebar}>
           <h3>Elements</h3>
           {C.ELEMENT_TYPES.map((element) => <PaletteItem key={element.type} element={element} />)}
         </div>
 
-        {/* 2. Center Section */}
+        {/* Center Section */}
         <div 
           ref={drop} 
           style={{ ...styles.canvas, backgroundColor: isOver ? '#e8f4ff' : '#fafafa' }}
@@ -131,7 +129,7 @@ export function FormBuilderContent() {
           )}
         </div>
 
-        {/* 3. Right Section */}
+        {/* Right Section */}
         <PropertiesPanel selectedField={selectedFieldData} onSave={handleSaveProperties} />
       </div>
 

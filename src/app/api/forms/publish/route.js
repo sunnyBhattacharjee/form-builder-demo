@@ -38,20 +38,14 @@ export async function POST(request) {
         const llmData = await ollamaResponse.json();
 
         let cleanCode = llmData.response;
-        // 1. Strip out markdown blocks
         cleanCode = llmData.response.replace(/^```[a-zA-Z]*\n?/gm, '').replace(/```$/gm, '').trim();
 
-        // 2. SCORCHED EARTH: Delete ANY variation of "use client" the LLM might have generated
-        // This regex catches 'use client', "use client", use client, with or without semicolons
         cleanCode = cleanCode.replace(/['"]?use client['"]?;?/gi, '').trim();
 
-        // 3. Force ONE perfect directive at the very top
         cleanCode = `'use client';\nimport React, { useState, useEffect } from 'react';\n\n${cleanCode}`;
 
-        // 4. (Optional) Strip out duplicate React imports if the LLM also generated them
-        // This prevents `import React...` from appearing twice
         cleanCode = cleanCode.replace(/(import React.*?from ['"]react['"];?)\n+/gi, '');
-        // Re-insert exactly once after use client
+        
         cleanCode = cleanCode.replace(/'use client';/, "'use client';\nimport React, { useState, useEffect } from 'react';");
 
         const targetDirectory = path.join(process.cwd(), 'src', 'app', 'active-user', 'generated-form');
@@ -62,11 +56,6 @@ export async function POST(request) {
         }
 
         fs.writeFileSync(targetFile, cleanCode.trim(), 'utf8');
-
-
-        if (!ollamaResponse.ok) {
-            throw new Error(data.message || 'Failed to publish to Java backend');
-        }
 
         return NextResponse.json({
             success: true,
