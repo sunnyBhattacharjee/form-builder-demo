@@ -1,57 +1,117 @@
-import { useState, useEffect } from 'react';
-import { styles } from '@/util/styles';
-// 3. Right Section: Properties Panel
+import React from 'react';
+
 export const PropertiesPanel = ({ selectedField, onSave }) => {
-  const [localData, setLocalData] = useState(null);
-
-  useEffect(() => {
-    setLocalData(selectedField);
-  }, [selectedField]);
-
-  if (!localData) {
+  if (!selectedField) {
     return (
-      <div style={styles.propertiesPanel}>
-        <h3>Properties</h3>
-        <p style={{ color: '#888', fontSize: '14px' }}>Select an element on the canvas to edit its properties.</p>
+      <div className="w-80 border-l bg-white p-6 overflow-y-auto">
+        <h3 className="font-bold mb-4">Properties</h3>
+        <p className="text-sm text-gray-500">Select an element on the canvas to edit its properties.</p>
       </div>
     );
   }
 
+  // Helper to update top-level properties
   const handleChange = (key, value) => {
-    setLocalData({ ...localData, [key]: value });
+    onSave({ ...selectedField, [key]: value });
+  };
+
+  // Helper to update nested styling properties
+  const handleStyleChange = (key, value) => {
+    onSave({ 
+      ...selectedField, 
+      styles: { ...selectedField.styles, [key]: value } 
+    });
+  };
+
+  // Helpers for array options (Dropdowns/Radios)
+  const handleOptionChange = (index, key, value) => {
+    const updatedOptions = [...selectedField.options];
+    updatedOptions[index] = { ...updatedOptions[index], [key]: value };
+    handleChange('options', updatedOptions);
+  };
+
+  const addOption = () => {
+    const newOpt = { label: `Option ${selectedField.options.length + 1}`, value: `opt${selectedField.options.length + 1}` };
+    handleChange('options', [...selectedField.options, newOpt]);
+  };
+
+  const removeOption = (indexToRemove) => {
+    handleChange('options', selectedField.options.filter((_, idx) => idx !== indexToRemove));
   };
 
   return (
-    <div style={styles.propertiesPanel}>
-      <h3>Field Properties</h3>
+    <div className="w-80 border-l bg-white p-6 overflow-y-auto h-full flex flex-col gap-4">
+      <h3 className="font-bold border-b pb-2">Properties</h3>
+
+      {/* --- Basic Settings --- */}
+      <div>
+        <label className="block text-xs text-gray-500 mb-1">Field Name (Variable)</label>
+        <input type="text" className="w-full p-2 border rounded" value={selectedField.name || ''} onChange={(e) => handleChange('name', e.target.value)} />
+      </div>
       
-      <div style={styles.propGroup}>
-        <label style={styles.propLabel}>Label</label>
-        <input style={styles.input} type="text" value={localData.label || ''} onChange={(e) => handleChange('label', e.target.value)} />
+      <div>
+        <label className="block text-xs text-gray-500 mb-1">Label</label>
+        <input type="text" className="w-full p-2 border rounded" value={selectedField.label || ''} onChange={(e) => handleChange('label', e.target.value)} />
       </div>
 
-      {['text', 'textarea', 'number'].includes(localData.type) && (
-        <div style={styles.propGroup}>
-          <label style={styles.propLabel}>Placeholder</label>
-          <input style={styles.input} type="text" value={localData.placeholder || ''} onChange={(e) => handleChange('placeholder', e.target.value)} />
+      {/* --- Options Manager --- */}
+      {selectedField.options && (
+        <div className="bg-gray-50 p-3 rounded border">
+          <label className="block text-xs font-bold text-gray-700 mb-2">List Options</label>
+          {selectedField.options.map((opt, idx) => (
+            <div key={idx} className="flex gap-2 mb-2">
+              <input type="text" placeholder="Label" className="w-full p-1 border rounded text-sm" value={opt.label} onChange={(e) => handleOptionChange(idx, 'label', e.target.value)} />
+              <input type="text" placeholder="Value" className="w-full p-1 border rounded text-sm" value={opt.value} onChange={(e) => handleOptionChange(idx, 'value', e.target.value)} />
+              <button onClick={() => removeOption(idx)} className="bg-red-100 text-red-600 px-2 rounded hover:bg-red-200">✕</button>
+            </div>
+          ))}
+          <button onClick={addOption} className="text-xs text-blue-600 hover:underline">+ Add Option</button>
         </div>
       )}
 
-      <div style={styles.propGroup}>
-        <label style={styles.propLabel}>Width (Grid Columns: 1-12)</label>
-        <input style={styles.input} type="number" min="1" max="12" value={localData.width || 12} onChange={(e) => handleChange('width', parseInt(e.target.value) || 12)} />
+      <hr />
+
+      {/* --- Validation & API --- */}
+      <h4 className="font-semibold text-sm">Logic & API</h4>
+      
+      <div>
+        <label className="block text-xs text-gray-500 mb-1">Regex Validation</label>
+        <input type="text" placeholder="^[0-9]+$" className="w-full p-2 border rounded font-mono text-sm" value={selectedField.regexValidation || ''} onChange={(e) => handleChange('regexValidation', e.target.value)} />
+      </div>
+      
+      <div>
+        <label className="block text-xs text-gray-500 mb-1">Error Message</label>
+        <input type="text" placeholder="Invalid input" className="w-full p-2 border rounded" value={selectedField.errorMessage || ''} onChange={(e) => handleChange('errorMessage', e.target.value)} />
       </div>
 
-      {localData.type !== 'row' && (
-        <div style={styles.propGroup}>
-          <label style={{ display: 'flex', gap: '8px', alignItems: 'center', fontSize: '14px' }}>
-            <input type="checkbox" checked={localData.required || false} onChange={(e) => handleChange('required', e.target.checked)} />
-            Required Field
-          </label>
-        </div>
-      )}
+      <div>
+        <label className="block text-xs text-gray-500 mb-1">API Endpoint</label>
+        <input type="text" placeholder="https://..." className="w-full p-2 border rounded" value={selectedField.apiEndpoint || ''} onChange={(e) => handleChange('apiEndpoint', e.target.value)} />
+      </div>
 
-      <button style={styles.saveBtn} onClick={() => onSave(localData)}>Save Properties</button>
+      <label className="flex items-center gap-2 text-sm mt-2">
+        <input type="checkbox" checked={selectedField.required || false} onChange={(e) => handleChange('required', e.target.checked)} />
+        Is Required Field
+      </label>
+
+      <hr />
+
+      {/* --- Appearance --- */}
+      <h4 className="font-semibold text-sm">Appearance</h4>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block text-xs text-gray-500 mb-1">Text Color</label>
+          <input type="color" className="w-full h-8 cursor-pointer" value={selectedField.styles?.color || '#333333'} onChange={(e) => handleStyleChange('color', e.target.value)} />
+        </div>
+        <div>
+          <label className="block text-xs text-gray-500 mb-1">Background</label>
+          <input type="color" className="w-full h-8 cursor-pointer" value={selectedField.styles?.backgroundColor || '#ffffff'} onChange={(e) => handleStyleChange('backgroundColor', e.target.value)} />
+        </div>
+        <div className="col-span-2">
+          <label className="block text-xs text-gray-500 mb-1">Border Radius (px)</label>
+          <input type="text" className="w-full p-2 border rounded" value={selectedField.styles?.borderRadius || '4px'} onChange={(e) => handleStyleChange('borderRadius', e.target.value)} />
+        </div>
+      </div>
     </div>
   );
 };

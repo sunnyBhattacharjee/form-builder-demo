@@ -1,72 +1,89 @@
-// 2. Center Section: Canvas Element (Recursive)
+import React, { useRef } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
-import * as C from "../../../../util/constants"
-import { styles } from '@/util/styles';
-export const CanvasItem = ({ field, onSelect, onDelete, onDropItem, selectedFieldId }) => {
-  const isSelected = selectedFieldId === field.id;
-  
-  const [{ isOver, canDrop }, drop] = useDrop(() => ({
-    accept: C.ITEM_TYPE,
+import * as C from '../../../../util/constants';
+
+export const CanvasItem = ({ field, selectedFieldId, onSelect, onDelete, onDropItem, onMoveItem }) => {
+  const ref = useRef(null);
+
+  const [{ isDragging }, drag] = useDrag({
+    type: 'CANVAS_ITEM',
+    item: { id: field.id, type: 'CANVAS_ITEM' },
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging(),
+    }),
+  });
+
+  const [{ isOverCurrent }, drop] = useDrop({
+    accept: [C.ITEM_TYPE, 'CANVAS_ITEM'],
     drop: (item, monitor) => {
-      if (monitor.didDrop()) return; 
-      onDropItem(item.type, field.id);
+      if (!monitor.isOver({ shallow: true })) return;
+
+      if (item.type === 'CANVAS_ITEM') {
+        if (item.id === field.id) return; 
+        const dropType = field.type === 'row' ? 'inside' : 'adjacent';
+        onMoveItem(item.id, field.id, dropType);
+      } else {
+        const parentId = field.type === 'row' ? field.id : null;
+        onDropItem(item.type, parentId);
+      }
     },
     collect: (monitor) => ({
-      isOver: monitor.isOver({ shallow: true }),
-      canDrop: monitor.canDrop(),
+      isOverCurrent: monitor.isOver({ shallow: true }),
     }),
-  }), [field.id, onDropItem]);
+  });
 
-  const isRow = field.type === 'row';
+  drag(drop(ref));
+
+  const isSelected = selectedFieldId === field.id;
+  const opacity = isDragging ? 0.3 : 1;
+  const highlightBg = isOverCurrent ? '#e8f4ff' : field.styles?.backgroundColor || '#ffffff';
 
   return (
-    <div
-      ref={isRow ? drop : null}
-      onClick={(e) => {
-        e.stopPropagation();
-        onSelect(field);
-      }}
-      style={{
-        ...styles.canvasItem,
-        gridColumn: `span ${field.width || 12}`,
-        border: isSelected ? '2px solid #007bff' : '1px solid #ddd',
-        backgroundColor: isOver && canDrop ? '#e8f4ff' : '#fff',
-        padding: isRow ? '25px 15px 15px 15px' : '15px',
+    <div 
+      ref={ref} 
+      onClick={(e) => { e.stopPropagation(); onSelect(field); }}
+      className={`relative p-4 rounded-md cursor-grab active:cursor-grabbing transition-all border-2 mb-3
+        ${isSelected ? 'border-blue-500 shadow-md' : 'border-gray-200 hover:border-blue-300'}`}
+      style={{ 
+        opacity, 
+        backgroundColor: highlightBg,
+        borderColor: field.styles?.borderColor,
+        borderRadius: field.styles?.borderRadius,
       }}
     >
-      <button 
-        style={styles.deleteBtn} 
-        onClick={(e) => { e.stopPropagation(); onDelete(field.id); }}
-      >✕</button>
+      {isSelected && (
+        <button 
+          onClick={(e) => { e.stopPropagation(); onDelete(field.id); }}
+          className="absolute -top-3 -right-3 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600 z-10"
+        >✕</button>
+      )}
 
-      <div style={{ pointerEvents: 'none', marginBottom: isRow ? '15px' : '0' }}>
-        <strong>{field.label}</strong> {field.required && <span style={{color: 'red'}}>*</span>}
-        {!isRow && (
-          <p style={{ margin: '5px 0 0 0', fontSize: '12px', color: '#666' }}>
-            [{field.type}] {field.placeholder ? `Placeholder: ${field.placeholder}` : ''}
-          </p>
-        )}
-      </div>
+      <label className="block font-medium mb-2" style={{ color: field.styles?.color, fontSize: field.styles?.fontSize }}>
+        {field.label} {field.required && <span className="text-red-500">*</span>}
+      </label>
 
-      {isRow && (
-        <div style={styles.nestedGridLayer}>
-          {!field.children || field.children.length === 0 ? (
-            <div style={{ color: '#aaa', fontSize: '12px', gridColumn: 'span 12', textAlign: 'center', padding: '10px' }}>
-              Drop items inside this row
-            </div>
-          ) : (
-            field.children.map((child) => (
-              <CanvasItem
-                key={child.id}
-                field={child}
-                onSelect={onSelect}
-                onDelete={onDelete}
-                onDropItem={onDropItem}
-                selectedFieldId={selectedFieldId}
+      {field.type === 'row' ? (
+        <div className="min-h-[80px] border-2 border-dashed border-gray-300 p-4 rounded bg-gray-50 flex gap-4">
+          {field.children?.length === 0 && <span className="text-gray-400 text-sm m-auto">Drop items here</span>}
+          {field.children?.map(child => (
+            <div key={child.id} className="flex-1">
+              <CanvasItem 
+                field={child} 
+                selectedFieldId={selectedFieldId} 
+                onSelect={onSelect} 
+                onDelete={onDelete} 
+                onDropItem={onDropItem} 
+                onMoveItem={onMoveItem} 
               />
-            ))
-          )}
+            </div>
+          ))}
         </div>
+      ) : (
+        <input 
+          type="text" 
+          placeholder={field.placeholder || "Preview input"}
+          className="w-full border p-2 rounded outline-none bg-gray-50 pointer-events-none"
+        />
       )}
     </div>
   );
