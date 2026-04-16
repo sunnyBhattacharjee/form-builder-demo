@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
 import * as C from '../../../../util/constants';
-
+import { styles } from '@/util/styles';
 export const CanvasItem = ({ field, selectedFieldId, onSelect, onDelete, onDropItem, onMoveItem }) => {
   const ref = useRef(null);
 
@@ -44,11 +44,14 @@ export const CanvasItem = ({ field, selectedFieldId, onSelect, onDelete, onDropI
       onClick={(e) => { e.stopPropagation(); onSelect(field); }}
       className={`relative p-4 rounded-md cursor-grab active:cursor-grabbing transition-all border-2 mb-3
         ${isSelected ? 'border-blue-500 shadow-md' : 'border-gray-200 hover:border-blue-300'}`}
-      style={{ 
+      style={{
+        ...styles.itemContainer,
+        ...(isSelected ? styles.itemSelected : styles.itemUnselected),
         opacity, 
         backgroundColor: highlightBg,
         borderColor: field.styles?.borderColor,
         borderRadius: field.styles?.borderRadius,
+        width: field.styles?.width || '100%', 
       }}
     >
       {isSelected && (
@@ -63,10 +66,13 @@ export const CanvasItem = ({ field, selectedFieldId, onSelect, onDelete, onDropI
       </label>
 
       {field.type === 'row' ? (
-        <div className="min-h-[80px] border-2 border-dashed border-gray-300 p-4 rounded bg-gray-50 flex gap-4">
+        <div style={
+          {...styles.rowContainer,
+          gridTemplateColumns: `repeat(${field.styles?.columns || 1}, 1fr)`}
+          }>
           {field.children?.length === 0 && <span className="text-gray-400 text-sm m-auto">Drop items here</span>}
           {field.children?.map(child => (
-            <div key={child.id} className="flex-1">
+            <div key={child.id} style={{ width: '100%' }}>
               <CanvasItem 
                 field={child} 
                 selectedFieldId={selectedFieldId} 
@@ -83,6 +89,10 @@ export const CanvasItem = ({ field, selectedFieldId, onSelect, onDelete, onDropI
           type="text" 
           placeholder={field.placeholder || "Preview input"}
           className="w-full border p-2 rounded outline-none bg-gray-50 pointer-events-none"
+          style={{
+            ...styles.inputPreview,
+            height: field.styles?.height || 'auto'
+          }}
         />
       )}
     </div>

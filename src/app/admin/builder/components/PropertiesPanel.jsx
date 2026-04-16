@@ -1,5 +1,5 @@
 import React from 'react';
-
+import { styles } from '@/util/styles';
 export const PropertiesPanel = ({ selectedField, onSave }) => {
   if (!selectedField) {
     return (
@@ -17,9 +17,9 @@ export const PropertiesPanel = ({ selectedField, onSave }) => {
 
   // Helper to update nested styling properties
   const handleStyleChange = (key, value) => {
-    onSave({ 
-      ...selectedField, 
-      styles: { ...selectedField.styles, [key]: value } 
+    onSave({
+      ...selectedField,
+      styles: { ...selectedField.styles, [key]: value }
     });
   };
 
@@ -48,7 +48,7 @@ export const PropertiesPanel = ({ selectedField, onSave }) => {
         <label className="block text-xs text-gray-500 mb-1">Field Name (Variable)</label>
         <input type="text" className="w-full p-2 border rounded" value={selectedField.name || ''} onChange={(e) => handleChange('name', e.target.value)} />
       </div>
-      
+
       <div>
         <label className="block text-xs text-gray-500 mb-1">Label</label>
         <input type="text" className="w-full p-2 border rounded" value={selectedField.label || ''} onChange={(e) => handleChange('label', e.target.value)} />
@@ -73,12 +73,12 @@ export const PropertiesPanel = ({ selectedField, onSave }) => {
 
       {/* --- Validation & API --- */}
       <h4 className="font-semibold text-sm">Logic & API</h4>
-      
+
       <div>
         <label className="block text-xs text-gray-500 mb-1">Regex Validation</label>
         <input type="text" placeholder="^[0-9]+$" className="w-full p-2 border rounded font-mono text-sm" value={selectedField.regexValidation || ''} onChange={(e) => handleChange('regexValidation', e.target.value)} />
       </div>
-      
+
       <div>
         <label className="block text-xs text-gray-500 mb-1">Error Message</label>
         <input type="text" placeholder="Invalid input" className="w-full p-2 border rounded" value={selectedField.errorMessage || ''} onChange={(e) => handleChange('errorMessage', e.target.value)} />
@@ -95,7 +95,27 @@ export const PropertiesPanel = ({ selectedField, onSave }) => {
       </label>
 
       <hr />
-
+      {/* --- Row / Grid Settings (ONLY SHOWS FOR ROWS) --- */}
+      {selectedField.type === 'row' && (
+        <>
+          <h4 style={{ fontWeight: '600', fontSize: '14px', marginTop: '16px', marginBottom: '8px' }}>Grid Layout</h4>
+          <div style={styles.inputGroup}>
+            <label style={styles.panelLabel}>Number of Columns</label>
+            <select 
+              style={styles.panelInput} 
+              value={selectedField.styles?.columns || 1} 
+              onChange={(e) => handleStyleChange('columns', parseInt(e.target.value))}
+            >
+              <option value={1}>1 Column (100%)</option>
+              <option value={2}>2 Columns (50% / 50%)</option>
+              <option value={3}>3 Columns (33% / 33% / 33%)</option>
+              <option value={4}>4 Columns (25% / 25% / 25% / 25%)</option>
+              <option value={6}>6 Columns</option>
+            </select>
+          </div>
+          <hr style={{ marginTop: '16px', borderTop: '1px solid #e5e7eb' }} />
+        </>
+      )}
       {/* --- Appearance --- */}
       <h4 className="font-semibold text-sm">Appearance</h4>
       <div className="grid grid-cols-2 gap-3">
@@ -107,10 +127,32 @@ export const PropertiesPanel = ({ selectedField, onSave }) => {
           <label className="block text-xs text-gray-500 mb-1">Background</label>
           <input type="color" className="w-full h-8 cursor-pointer" value={selectedField.styles?.backgroundColor || '#ffffff'} onChange={(e) => handleStyleChange('backgroundColor', e.target.value)} />
         </div>
-        <div className="col-span-2">
-          <label className="block text-xs text-gray-500 mb-1">Border Radius (px)</label>
-          <input type="text" className="w-full p-2 border rounded" value={selectedField.styles?.borderRadius || '4px'} onChange={(e) => handleStyleChange('borderRadius', e.target.value)} />
+            
+        <div>
+          <label style={styles.panelLabel}>Border Radius (px)</label>
+          <input type="text" style={styles.panelInput} value={selectedField.styles?.borderRadius || '4px'} onChange={(e) => handleStyleChange('borderRadius', e.target.value)} />
         </div>
+      <div>
+          <label style={styles.panelLabel}>Width (%, px, fr)</label>
+          <input 
+            type="text" 
+            placeholder="e.g., 100%, 50%, 250px"
+            style={styles.panelInput} 
+            value={selectedField.styles?.width || '100%'} 
+            onChange={(e) => handleStyleChange('width', e.target.value)} 
+          />
+        </div>
+        <div>
+          <label style={styles.panelLabel}>Height (px, auto)</label>
+          <input 
+            type="text" 
+            placeholder="e.g., auto, 100px"
+            style={styles.panelInput} 
+            value={selectedField.styles?.height || 'auto'} 
+            onChange={(e) => handleStyleChange('height', e.target.value)} 
+          />
+        </div>
+        
       </div>
     </div>
   );
