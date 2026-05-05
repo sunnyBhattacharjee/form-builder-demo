@@ -60,3 +60,5 @@ INSERT INTO users (username, password, role) VALUES ('admin', 'password123', 'ad
 INSERT INTO users (username, password, role) VALUES ('active_user', 'password123', 'active_user');
 
 SElECT * from users;
+
+DATABASE_URL=postgresql://postgres:admin@localhost:5432/dynamic_forms_db
