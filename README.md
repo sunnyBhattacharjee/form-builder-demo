@@ -47,3 +47,16 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
     endpoint: "/api/v1/validate-user"
   }
 }
+
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    role VARCHAR(20) NOT NULL 
+);
+
+
+INSERT INTO users (username, password, role) VALUES ('admin', 'password123', 'admin');
+INSERT INTO users (username, password, role) VALUES ('active_user', 'password123', 'active_user');
+
+SElECT * from users;
